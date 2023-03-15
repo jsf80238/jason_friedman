@@ -104,19 +104,19 @@ So, now you've got potentially a lot of data ... where do you tell your auditors
 
 That's what this program does.
 
-## Example usage
-I grabbed sample [Los Angeles restaurant inspection data from https://www.kaggle.com.
+## Usage
+I grabbed sample Los Angeles restaurant inspection data from https://www.kaggle.com.
 The URL at that time was https://www.kaggle.com/datasets/cityofLA/la-restaurant-market-health-data. 
 
 ### Installation
-- `git clone git@github.com:jsf80238/jason_friedman.git`
+- `git clone https://github.com/jsf80238/jason_friedman.git`
 - `cd jason_friedman`
-- `python -m venv your-dir`
+- `python3 -m venv your-dir`
 - `source your-dir/bin/activate`  # or on Windows `your-dir\Scripts\activate.bat`
 - `pip install -r requirements.txt`
 
 ### Execution
-    $ venv/bin/python analyze-quality.py -h
+    $ your-dir/bin/python analyze-quality.py -h
     usage: analyze-quality.py [-h] [--header NUM] [--max-detail-values NUM] [-v | -t] input
     
     Analyze the quality of a CSV file.
@@ -135,7 +135,7 @@ The URL at that time was https://www.kaggle.com/datasets/cityofLA/la-restaurant-
     Generates an Excel workbook containing the analysis.
 
 - Download your data.
-- `venv/bin/python analyze-quality.py ~/Downloads/restaurant-and-market-health-inspections.csv`
+- `your-dir/bin/python analyze-quality.py ~/Downloads/restaurant-and-market-health-inspections.csv`
 - The results will be an `.xlsx` workbook in your current directory, named the same as the input file (excepting the extension).
 
 ### Results

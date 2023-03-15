@@ -224,11 +224,3 @@ for label, detail_df in detail_dict.items():
     detail_df.to_excel(writer, index=False, sheet_name=truncate_string(label+" detail", MAX_SHEET_NAME_LENGTH))
 writer.close()
 logger.info(f"Wrote {os.stat(output_path).st_size} bytes to '{output_path}'.")
-
-
-# https://dateparser.readthedocs.io/en/latest/
-# filename = "data.txt"
-# n = sum(1 for line in open(filename)) - 1 #number of records in file (excludes header)
-# s = 10000 #desired sample size
-# skip = sorted(random.sample(range(1,n+1),n-s)) #the 0-indexed header will not be included in the skip list
-# df = pandas.read_csv(filename, skiprows=skip)
