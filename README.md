@@ -111,31 +111,32 @@ The URL at that time was https://www.kaggle.com/datasets/cityofLA/la-restaurant-
 ### Installation
 - `git clone https://github.com/jsf80238/jason_friedman.git`
 - `cd jason_friedman`
-- `python3 -m venv your-dir`
-- `source your-dir/bin/activate`  # or on Windows `your-dir\Scripts\activate.bat`
+- `python3 -m venv your_dir`
+- `source your_dir/bin/activate`  # or on Windows `your_dir\Scripts\activate.bat`
 - `pip install -r requirements.txt`
 
 ### Execution
-    $ your-dir/bin/python analyze-quality.py -h
+    $ your_dir/bin/python analyze-quality.py -h
     usage: analyze-quality.py [-h] [--header NUM] [--max-detail-values NUM] [-v | -t] input
     
     Analyze the quality of a CSV file.
-    
+        
     positional arguments:
       input                 /path/to/file.csv.
     
     options:
       -h, --help            show this help message and exit
       --header NUM          Specify the number of rows to skip for header information.
-      --max-detail-values NUM
-                            Produce this many of the top/bottom value occurrences, default is 35.
+      --max-detail-values INT
+                            Produce this many of the top/bottom value occurrences, default is 35. (must be in range 1..=1e+99)
+      --sample-percent INT  Randomly choose this percentage of the input data and ignore the remainder. (must be in range 1..=99)
       -v, --verbose
       -t, --terse
-    
+     
     Generates an Excel workbook containing the analysis.
 
 - Download your data.
-- `your-dir/bin/python analyze-quality.py ~/Downloads/restaurant-and-market-health-inspections.csv`
+- `your_dir/bin/python analyze-quality.py ~/Downloads/restaurant-and-market-health-inspections.csv`
 - The results will be an `.xlsx` workbook in your current directory, named the same as the input file (excepting the extension).
 
 ### Results

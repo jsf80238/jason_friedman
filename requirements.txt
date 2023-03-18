@@ -1,3 +1,4 @@
+argparse-range==0.1.2
 contourpy==1.0.7
 cycler==0.11.0
 fonttools==4.39.0
