@@ -2,9 +2,11 @@ import argparse
 import logging
 import os
 import pathlib
+import random
 import sys
 # Imports above are standard Python
 # Imports below are 3rd-party
+from argparse_range import range_action
 import pandas as pd
 from dateutil.parser import parse
 import numpy as np
@@ -55,8 +57,20 @@ parser = argparse.ArgumentParser(
     epilog='Generates an Excel workbook containing the analysis.'
 )
 parser.add_argument('input', help="/path/to/file.csv.")
-parser.add_argument('--header', type=int, metavar="NUM", help="Specify the number of rows to skip for header information.")
-parser.add_argument('--max-detail-values', type=int, metavar="NUM", default=DEFAULT_MAX_DETAIL_VALUES, help=f"Produce this many of the top/bottom value occurrences, default is {DEFAULT_MAX_DETAIL_VALUES}.")
+parser.add_argument('--header',
+                    type=int,
+                    metavar="NUM",
+                    help="Specify the number of rows to skip for header information.")
+parser.add_argument('--max-detail-values',
+                    type=int, metavar="INT",
+                    action=range_action(1, 1e99),
+                    default=DEFAULT_MAX_DETAIL_VALUES,
+                    help=f"Produce this many of the top/bottom value occurrences, default is {DEFAULT_MAX_DETAIL_VALUES}.")
+parser.add_argument('--sample-percent',
+                    type=int,
+                    metavar="INT",
+                    action=range_action(1, 99),
+                    help=f"Randomly choose this percentage of the input data and ignore the remainder.")
 logging_group = parser.add_mutually_exclusive_group()
 logging_group.add_argument('-v', '--verbose', action='store_true')
 logging_group.add_argument('-t', '--terse', action='store_true')
@@ -84,10 +98,18 @@ else:
     output_path = (input_path.parent / input_path.stem).with_suffix(".xlsx")
 
 logger.info(f"Reading from '{input_path}' ...")
+
+skip_list = list()
+if args.sample_percent:
+    header_size = args.header or 1
+    number_of_rows = sum(1 for line in open(input_path)) - header_size
+    sample_size = int(args.sample_percent * number_of_rows / 100)
+    skip_list = sorted(random.sample(range(header_size, number_of_rows+1), number_of_rows-sample_size))
+
 if args.header:
-    input_df = pd.read_csv(input_path, header=args.header)
+    input_df = pd.read_csv(input_path, skiprows=skip_list, header=args.header)
 else:
-    input_df = pd.read_csv(input_path)
+    input_df = pd.read_csv(input_path, skiprows=skip_list)
 
 
 def parse_date(date):
