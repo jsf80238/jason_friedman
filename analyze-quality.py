@@ -4,17 +4,31 @@ import os
 import pathlib
 import random
 import sys
+import tempfile
+import zipfile
 # Imports above are standard Python
 # Imports below are 3rd-party
 from argparse_range import range_action
 import pandas as pd
 from dateutil.parser import parse
 import numpy as np
+import seaborn as sns
 
 DEFAULT_MAX_DETAIL_VALUES = 35
 UP_ARROW = "⤒"
 DOWN_ARROW = "⤓"
 MAX_SHEET_NAME_LENGTH = 31  # Excel limitation
+# Don't plot distributions if there are fewer than this number of distinct values
+DISTRIBUTION_PLOT_MIN_VALUES = 6
+# Categorical plots should have no more than this number of distinct values
+# Groups the rest in "Other"
+CATEGORICAL_PLOT_MAX_VALUES = 5
+PLOT_SIZE_X, PLOT_SIZE_Y = 11, 8.5
+PLOT_FONT_SCALE = 0.75
+OTHER = "Other"
+OBJECT = "object"
+VALUE, COUNT = "Value", "Count"
+IMAGES = "images"
 
 ROW_COUNT = "count"
 NULL_COUNT = "null"
@@ -62,7 +76,8 @@ parser.add_argument('--header',
                     metavar="NUM",
                     help="Specify the number of rows to skip for header information.")
 parser.add_argument('--max-detail-values',
-                    type=int, metavar="INT",
+                    type=int,
+                    metavar="INT",
                     action=range_action(1, 1e99),
                     default=DEFAULT_MAX_DETAIL_VALUES,
                     help=f"Produce this many of the top/bottom value occurrences, default is {DEFAULT_MAX_DETAIL_VALUES}.")
@@ -74,6 +89,7 @@ parser.add_argument('--sample-percent',
 logging_group = parser.add_mutually_exclusive_group()
 logging_group.add_argument('-v', '--verbose', action='store_true')
 logging_group.add_argument('-t', '--terse', action='store_true')
+parser.add_argument('--no-plot', action='store_true', help="Don't generate plots.")
 args = parser.parse_args()
 input_path = pathlib.Path(args.input)
 max_detail_values = args.max_detail_values
@@ -95,7 +111,14 @@ if not input_path.exists():
     logger.critical(f"No such file '{args.input}'.")
     sys.exit(1)
 else:
-    output_path = (input_path.parent / input_path.stem).with_suffix(".xlsx")
+    # If not producing plots generate an Excel file with the same name as the input
+    # If producing plots generate a .zip file with the same name as the input
+    if args.no_plot:
+        summary_output_path = (input_path.parent / input_path.stem).with_suffix(".xlsx")
+    else:
+        tempdir = tempfile.TemporaryDirectory()
+        tempdir_path = pathlib.Path(tempdir.name)
+        summary_output_path = tempdir_path / "summary.xlsx"
 
 logger.info(f"Reading from '{input_path}' ...")
 
@@ -110,13 +133,14 @@ if args.header:
     input_df = pd.read_csv(input_path, skiprows=skip_list, header=args.header)
 else:
     input_df = pd.read_csv(input_path, skiprows=skip_list)
+    # input_df = pd.read_csv(input_path, skiprows=skip_list, usecols=['score'])
 
 
 def parse_date(date):
     if date is np.nan:
         return np.nan
     else:
-        return parse(date)
+        return parse(date)  # dateutil's parser
 
 
 def truncate_string(s, max_length, filler="..."):
@@ -161,6 +185,23 @@ def set_best_type(series):
     return series
 
 
+def make_categorical_plot_data(series, max_distinct_values=CATEGORICAL_PLOT_MAX_VALUES):
+    """
+    :param series:
+    :return: a dataframe (columns "Value", "Count") with a useful number of categories
+    """
+    plot_data = series.value_counts(normalize=False, ascending=False)
+    if len(plot_data) > max_distinct_values:
+        # We have more than a useful number of distinct values
+        # Pick the top N and lump the others under "Other"
+        top_value_series = series.value_counts()[:CATEGORICAL_PLOT_MAX_VALUES]
+        top_value_sum = top_value_series.sum()
+        other_sum = data.size - top_value_sum
+        other_series = pd.Series(data={OTHER: other_sum})
+        plot_data = pd.concat([top_value_series, other_series])
+    return pd.DataFrame({VALUE: plot_data.index, COUNT: plot_data.values})
+
+
 summary_dict = dict()  # To be converted into the summary worksheet
 detail_dict = dict()  # Each element to be converted into a detail worksheet
 for label in input_df.columns:
@@ -193,7 +234,7 @@ for label in input_df.columns:
         # Most common%
         row_dict[MOST_COMMON_PERCENT] = 100 * list(data.value_counts())[0] / row_count
 
-        if data.dtype == 'object':
+        if data.dtype == OBJECT:
             # Largest & smallest
             row_dict[LARGEST] = data.dropna().astype(pd.StringDtype()).max()
             row_dict[SMALLEST] = data.dropna().astype(pd.StringDtype()).min()
@@ -234,15 +275,62 @@ for label in input_df.columns:
     summary_dict[label] = row_dict
     detail_dict[label] = detail_df
 
-# Convert this dictionary of dictionaries to a DataFrame
+# Convert the summary_dict dictionary of dictionaries to a DataFrame
 result_df = pd.DataFrame.from_dict(summary_dict, orient='index')
 # And write it to a worksheet
 logger.info("Writing summary ...")
-writer = pd.ExcelWriter(output_path, engine='xlsxwriter')
+writer = pd.ExcelWriter(summary_output_path, engine='xlsxwriter')
 result_df.to_excel(writer, sheet_name="Summary")
 # And generate a detail sheet for each column
 for label, detail_df in detail_dict.items():
     logger.info(f"Writing detail for column '{label}' ...")
     detail_df.to_excel(writer, index=False, sheet_name=truncate_string(label+" detail", MAX_SHEET_NAME_LENGTH))
 writer.close()
-logger.info(f"Wrote {os.stat(output_path).st_size} bytes to '{output_path}'.")
+logger.info(f"Wrote {os.stat(summary_output_path).st_size} bytes to '{summary_output_path}'.")
+
+# Maybe produce plots
+if not args.no_plot:
+    # Iterate over the columns
+    # String columns will get a categorical plot, if we calculate such a plot will be useful
+    # Numeric and date columns will get a distribution plot, if we calculate such a plot will be useful,
+    # else a categorical plot
+    output_file = (input_path.parent / input_path.stem).with_suffix(".zip")
+    print(output_file)
+    1/0
+    with zipfile.ZipFile(output_file, 'w') as myzip:
+        # Add summary file
+        myzip.write(summary_output_path)
+        # Write images into a directory
+        myzip.mkdir(IMAGES)
+
+        sns.set_theme()
+        sns.set(font_scale=PLOT_FONT_SCALE)
+        for label in input_df.columns:
+            logger.info(f"Examining column '{label}' for plotting ...")
+            data = input_df[label]
+            # Data type and the number and distribution values will influence what type of plot we generate
+            if data.dtype == OBJECT:  # string data
+                plot_df = make_categorical_plot_data(data)
+                g = sns.catplot(data=plot_df, x=VALUE, y=COUNT, kind="bar")
+                g.set_xticklabels(plot_df[VALUE], rotation=45)
+                plot_output_path = tempdir_path / f"{label}.categorical.png"
+            else:  # numeric or datetime
+                # We will probably make a distribution plot, but if there's only a few distinct values
+                # then a categorical plot is more useful
+                plot_data = data.value_counts(normalize=True)
+                if len(plot_data) < DISTRIBUTION_PLOT_MIN_VALUES:
+                    plot_df = make_categorical_plot_data(data)
+                    g = sns.catplot(data=plot_df, x=VALUE, y=COUNT, kind="bar")
+                    g.set_xticklabels(plot_df[VALUE], rotation=45)
+                    plot_output_path = tempdir_path / f"{label}.categorical.png"
+                else:
+                    g = sns.displot(data)
+                    plot_output_path = tempdir_path / f"{label}.distribution.png"
+            g.set_axis_labels(VALUE, COUNT, labelpad=10)
+            g.figure.set_size_inches(PLOT_SIZE_X, PLOT_SIZE_Y)
+            g.ax.margins(.15)
+            g.savefig(plot_output_path)
+            logger.info(f"Wrote {os.stat(plot_output_path).st_size} bytes to '{plot_output_path}'.")
+            myzip.write(plot_output_path, arcname="/".join((IMAGES, plot_output_path.name)))
+
+    myzip.close()
