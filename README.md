@@ -127,7 +127,7 @@ The URL at that time was https://www.kaggle.com/datasets/cityofLA/la-restaurant-
     options:
       -h, --help            show this help message and exit
       --header NUM          Specify the number of rows to skip for header information.
-      --max-detail-values INT
+      --max-detail-values INT 
                             Produce this many of the top/bottom value occurrences, default is 35. (must be in range 1..=1e+99)
       --sample-percent INT  Randomly choose this percentage of the input data and ignore the remainder. (must be in range 1..=99)
       -v, --verbose

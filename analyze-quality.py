@@ -57,9 +57,20 @@ parser = argparse.ArgumentParser(
     epilog='Generates an Excel workbook containing the analysis.'
 )
 parser.add_argument('input', help="/path/to/file.csv.")
-parser.add_argument('--header', type=int, metavar="NUM", help="Specify the number of rows to skip for header information.")
-parser.add_argument('--max-detail-values', type=int, metavar="INT", action=range_action(1, 1e99), default=DEFAULT_MAX_DETAIL_VALUES, help=f"Produce this many of the top/bottom value occurrences, default is {DEFAULT_MAX_DETAIL_VALUES}.")
-parser.add_argument('--sample-percent', type=int, metavar="INT", action=range_action(1, 99), help=f"Randomly choose this percentage of the input data and ignore the remainder.")
+parser.add_argument('--header',
+                    type=int,
+                    metavar="NUM",
+                    help="Specify the number of rows to skip for header information.")
+parser.add_argument('--max-detail-values',
+                    type=int, metavar="INT",
+                    action=range_action(1, 1e99),
+                    default=DEFAULT_MAX_DETAIL_VALUES,
+                    help=f"Produce this many of the top/bottom value occurrences, default is {DEFAULT_MAX_DETAIL_VALUES}.")
+parser.add_argument('--sample-percent',
+                    type=int,
+                    metavar="INT",
+                    action=range_action(1, 99),
+                    help=f"Randomly choose this percentage of the input data and ignore the remainder.")
 logging_group = parser.add_mutually_exclusive_group()
 logging_group.add_argument('-v', '--verbose', action='store_true')
 logging_group.add_argument('-t', '--terse', action='store_true')
