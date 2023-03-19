@@ -1,99 +1,6 @@
 # Author
 [Jason Friedman](https://www.linkedin.com/in/jasonfriedmantechnology/) is the author of this code.
 
-# parse-unicode.py
-## Overview
-I have many times been asked to diagnose cases where data flowing from a source fails to be accepted by a target with an error like:
-
-    codec can't decode bytes in position 2-4
-
-It is sometimes helpful to verify the input data is what we expect.
-
-## Usage
-`parse-unicode.py` takes its input from STDIN, or from a file if one is provided as an argument.
-
-All of the examples produce this output (note the multi-byte character `PLUS-MINUS SIGN` at bytes 19 & 20):
-
-    char line_num char_num byte_num character_name
-       T        1        0        0 LATIN CAPITAL LETTER T
-       h        1        1        1 LATIN SMALL LETTER H
-       e        1        2        2 LATIN SMALL LETTER E
-                1        3        3 SPACE
-       e        1        4        4 LATIN SMALL LETTER E
-       r        1        5        5 LATIN SMALL LETTER R
-       r        1        6        6 LATIN SMALL LETTER R
-       o        1        7        7 LATIN SMALL LETTER O
-       r        1        8        8 LATIN SMALL LETTER R
-                1        9        9 SPACE
-       r        1       10       10 LATIN SMALL LETTER R
-       a        1       11       11 LATIN SMALL LETTER A
-       t        1       12       12 LATIN SMALL LETTER T
-       e        1       13       13 LATIN SMALL LETTER E
-                1       14       14 SPACE
-       w        1       15       15 LATIN SMALL LETTER W
-       a        1       16       16 LATIN SMALL LETTER A
-       s        1       17       17 LATIN SMALL LETTER S
-                1       18       18 SPACE
-       ±        1       19       19 PLUS-MINUS SIGN
-       5        1       20       21 DIGIT FIVE
-       %        1       21       22 PERCENT SIGN
-       ,        1       22       23 COMMA
-                1       23       24 CARRIAGE RETURN
-       w        2       24       25 LATIN SMALL LETTER W
-       h        2       25       26 LATIN SMALL LETTER H
-       i        2       26       27 LATIN SMALL LETTER I
-       c        2       27       28 LATIN SMALL LETTER C
-       h        2       28       29 LATIN SMALL LETTER H
-                2       29       30 SPACE
-       w        2       30       31 LATIN SMALL LETTER W
-       a        2       31       32 LATIN SMALL LETTER A
-       s        2       32       33 LATIN SMALL LETTER S
-                2       33       34 SPACE
-       g        2       34       35 LATIN SMALL LETTER G
-       o        2       35       36 LATIN SMALL LETTER O
-       o        2       36       37 LATIN SMALL LETTER O
-       d        2       37       38 LATIN SMALL LETTER D
-                2       38       39 SPACE
-       e        2       39       40 LATIN SMALL LETTER E
-       n        2       40       41 LATIN SMALL LETTER N
-       o        2       41       42 LATIN SMALL LETTER O
-       u        2       42       43 LATIN SMALL LETTER U
-       g        2       43       44 LATIN SMALL LETTER G
-       h        2       44       45 LATIN SMALL LETTER H
-                2       45       46 SPACE
-       f        2       46       47 LATIN SMALL LETTER F
-       o        2       47       48 LATIN SMALL LETTER O
-       r        2       48       49 LATIN SMALL LETTER R
-                2       49       50 SPACE
-       t        2       50       51 LATIN SMALL LETTER T
-       h        2       51       52 LATIN SMALL LETTER H
-       e        2       52       53 LATIN SMALL LETTER E
-       m        2       53       54 LATIN SMALL LETTER M
-       !        2       54       55 EXCLAMATION MARK
-                2       55       56 CARRIAGE RETURN
-
-### STDIN v.1
-
-    $ python3 parse-unicode.py <<EOF
-    > The error rate was ±5%,
-    > which was good enough for them!
-    > EOF
-
-### STDIN v.2
-
-    $ cat /tmp/example.txt
-    The error rate was ±5%,
-    which was good enough for them!
-
-    $ cat /tmp/example.txt | python3 parse-unicode.py
-
-### File
-    $ cat /tmp/example.txt
-    The error rate was ±5%,
-    which was good enough for them!
-     
-    $ python3 parse-unicode.py /tmp/example.txt 
-
 # analyze-quality.py
 ## Overview
 The idea for this code came from my time managing a team of data analysts for an internal audit department of a large company.
@@ -117,32 +24,36 @@ The URL at that time was https://www.kaggle.com/datasets/cityofLA/la-restaurant-
 
 ### Execution
     $ your_dir/bin/python analyze-quality.py -h
-    usage: analyze-quality.py [-h] [--header NUM] [--max-detail-values NUM] [-v | -t] input
+    usage: analyze-quality.py [-h] [--header NUM] [--max-detail-values INT] [--sample-percent INT] [--no-plot] [-v | -t] input
     
-    Analyze the quality of a CSV file.
-        
+    Profile the data in a CSV file.
+    
     positional arguments:
-      input                 /path/to/file.csv.
+      input                 /path/to/file.csv
     
     options:
       -h, --help            show this help message and exit
       --header NUM          Specify the number of rows to skip for header information.
-      --max-detail-values INT 
+      --max-detail-values INT
                             Produce this many of the top/bottom value occurrences, default is 35. (must be in range 1..=1e+99)
       --sample-percent INT  Randomly choose this percentage of the input data and ignore the remainder. (must be in range 1..=99)
+      --no-plot             Don't generate plots.
       -v, --verbose
       -t, --terse
-     
-    Generates an Excel workbook containing the analysis.
+    
+    Generates an analysis consisting of an Excel workbook and (optionally) one or more images.
 
 - Download your data.
 - `your_dir/bin/python analyze-quality.py ~/Downloads/restaurant-and-market-health-inspections.csv`
-- The results will be an `.xlsx` workbook in your current directory, named the same as the input file (excepting the extension).
+- The results will be an `.zip` archive in your current directory, named the same as the input file (excepting the extension).
 
 ### Results
-The workbook will contain multiple sheets:
-- Summary.
-- Detail, one sheet per column in the data source.
+The program generates a zip file containing:
+- Excel workbook containing multiple sheets:
+  - Summary.
+  - Detail, one sheet per column in the data source.
+- Images folder:
+  - One image per column, either a categorical plot or distrbution plot depending on which the program thinks would be most helpful.
 
 This is an example summary:
 ![Summary](images/analyze_quality/summary.png)
@@ -157,17 +68,33 @@ Let's focus on the highlighted cells.
 - M7, M18: the program treats numbers as measurements, even though for these columns the numbers are just IDs. Perhaps more sophisticated code could do better.
 
 Now, details by column.
+#### score
+
+![score.distribution](images/analyze_quality/score.distribution.png)
+
+- As a first estimate I would have guessed this would look like a Bell curve, perhaps with a bit of [skew](https://www.itl.nist.gov/div898/handbook/eda/section3/eda35b.htm).
+- Instead, we many more scores of 90 than expected and much fewer scores of 89 than expected (and fewer in the 80s than expected).
+- Without proof I would guess:
+  - A score of 90-100 yields a sign in the restaurant window with the letter A.
+  - A score of 80-99 yields a sign in the restaurant window with the letter B.
+  - People don't like to eat at restaurants which fail to achieve a A-rating.
+  - Restaurant owners, and to a lesser extent restaurant inspectors, strive to avoid anything other than a A-rating. (Image below courtesy of https://la.eater.com/2015/8/19/9178907/la-county-health-department-restaurant-grades-need-overhaul.)
+
+![restaurant_rating_in_window](images/analyze_quality/restaurant_rating_in_window.png)
+
+#### employee_id
+
+![employee_id.categorical](images/analyze_quality/employee_id.categorical.png)
+
+![employee_id_detail](images/analyze_quality/employee_id_detail.png)
+
+- One employee (EE0000721) among the 143 who performed inspections handled one out of every fourteen inspections. And it was twice as many as the next busiest inspector. Why?
+
 #### activity_date
 
 ![activity_date_detail](images/analyze_quality/activity_date_detail.png)
 
-- Note the dates with very few inspections (F2, F3, F4 ...). These are Saturdays and Sundays. It makes sense inspectors (city staff) don't work on weekends ... although perhaps for this kind of work they should?
-
-#### employee_id
-
-![employee_id_detail](images/analyze_quality/employee_id_detail.png)
-
-- One employee among the 143 who performed inspections handled one out of every fourteen inspections. And it was twice as many as the next busiest inspector. Why?
+- Note the dates with very few inspections (F2, F3, F4 ...). These are Saturdays and Sundays. It makes sense inspectors (city staff) don't work as much on weekends.
 
 #### facility_name
 
@@ -193,6 +120,7 @@ Now, details by column.
 - Read data directly from a database.
 - Allow the specification of unusual, but known, datetime formats.
 - Allow the specification of columns to exclude, or include.
-- Generate plots. It is difficult to generate useful plots.
+- Generate better plots. It is difficult to generate useful plots.
   - For example, you might want a categorical plot for character data, but if the column contains customer names then every name will appear (roughly) one time.
   - Or, you might want a histogram for numeric or datetime data, but if the column is a primary key, or a created timestamp generated by a trigger, then again each value will appear (almost always) one time.
+  - Allow the caller to specify plot visual effects.
