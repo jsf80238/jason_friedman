@@ -1,0 +1,58 @@
+function hgrep {
+    history | perl -e "while (<>) {print if (m/$1/i)}"
+}
+
+function lt {
+    ls -ltr | tail -${1:-10}
+}
+
+function myencrypt {
+    gpg --cipher-algo AES256 --symmetric --out $1.gpg $1
+}
+
+function mydecrypt {
+    OUTPUT_FILE=$(echo $1 | perl -e 'while (<>) {print substr($_, 0, -5)}')
+    gpg --cipher-algo AES256 --output $OUTPUT_FILE -d $1
+}
+
+function resize {
+    filename=$1
+    new_size=$2
+    if [ $# -ne 2 ]; then
+        echo "resize filename.jpg num" >&2
+        return 1
+    fi
+    re="^(.+).jpg$"
+    [[ $filename =~ $re ]] && new_filename="${BASH_REMATCH[1]}.${new_size}.jpg"
+    convert $filename -resize ${new_size}% $new_filename
+    ls -l $new_filename
+}
+
+function search-connections {
+    python3 /home/jason/.config/JetBrains/PyCharmCE2022.3/scratches/find-connection.py "$1" ~/Employment/*csv
+}
+
+function gsearch {
+    search_phrase=$1
+    url="https://www.google.com/search?q="
+    url+=$(echo "${search_phrase}" | python3 -c "if True:
+        from urllib.parse import quote_plus
+        import sys
+        print(quote_plus(sys.stdin.readlines()[0].strip()), end='')
+    ")
+    chromium $url
+}
+
+function bounce-docker {
+    KEY_FILE_NAME=gcloud-service-key.json
+    KEY_FILE_PATH=$HOME/DATA-Jobs/airflow/keys/$KEY_FILE_NAME
+    pushd
+    if [ ! -f $HOME/DATA-Jobs/airflow/keys ]; then
+        cp $HOME/gcloud-service-key.json $HOME/DATA-Jobs/airflow/keys
+    fi
+    cd $HOME/DATA-Jobs/airflow
+    docker-compose down
+    docker-compose up --build
+    #set -e
+    popd
+}
