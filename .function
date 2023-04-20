@@ -16,6 +16,14 @@ function mydecrypt {
 }
 
 function resize {
+    # set -xv
+    shopt -q nocasematch  # This command returns with exit code 0 if nocasematch is enabled
+    if [ $? -eq 0 ]; then
+        nocasematch=1  # nocasematch was already enabled
+    else
+        nocasematch=0  # nocasematch was disabled
+        shopt -s nocasematch  # Regex matching without regard to case
+    fi
     filename=$1
     new_size=$2
     if [ $# -ne 2 ]; then
@@ -23,12 +31,13 @@ function resize {
         return 1
     fi
     re="^(.+).(jpg|png)$"
-    # Convert $filename to lowercase for regex matching
-    [[ ${filename,,} =~ $re ]] && new_filename="${BASH_REMATCH[1]}.${new_size}.${BASH_REMATCH[2]}"
-    command="convert ${filename} -resize ${new_size}% ${new_filename}"
-    echo $command
-    $($command)
+    [[ "$filename" =~ $re ]] && new_filename="${BASH_REMATCH[1]}.${new_size}.${BASH_REMATCH[2]}"
+    convert ${filename} -resize ${new_size}% ${new_filename}
     ls -l $filename $new_filename
+    if [ $nocasematch -eq 0 ]; then
+        shopt -u nocasematch  # nocasematch was disabled when we started, set it back to disabled
+    fi
+    # set +xv
 }
 
 function search-connections {
