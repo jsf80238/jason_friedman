@@ -22,10 +22,13 @@ function resize {
         echo "resize filename.jpg num" >&2
         return 1
     fi
-    re="^(.+).jpg$"
-    [[ $filename =~ $re ]] && new_filename="${BASH_REMATCH[1]}.${new_size}.jpg"
-    convert $filename -resize ${new_size}% $new_filename
-    ls -l $new_filename
+    re="^(.+).(jpg|png)$"
+    # Convert $filename to lowercase for regex matching
+    [[ ${filename,,} =~ $re ]] && new_filename="${BASH_REMATCH[1]}.${new_size}.${BASH_REMATCH[2]}"
+    command="convert ${filename} -resize ${new_size}% ${new_filename}"
+    echo $command
+    $($command)
+    ls -l $filename $new_filename
 }
 
 function search-connections {
@@ -41,18 +44,4 @@ function gsearch {
         print(quote_plus(sys.stdin.readlines()[0].strip()), end='')
     ")
     chromium $url
-}
-
-function bounce-docker {
-    KEY_FILE_NAME=gcloud-service-key.json
-    KEY_FILE_PATH=$HOME/DATA-Jobs/airflow/keys/$KEY_FILE_NAME
-    pushd
-    if [ ! -f $HOME/DATA-Jobs/airflow/keys ]; then
-        cp $HOME/gcloud-service-key.json $HOME/DATA-Jobs/airflow/keys
-    fi
-    cd $HOME/DATA-Jobs/airflow
-    docker-compose down
-    docker-compose up --build
-    #set -e
-    popd
 }
