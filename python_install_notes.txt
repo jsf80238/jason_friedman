@@ -1,0 +1,18 @@
+sudo apt install software-properties-common build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev wget libbz2-dev libsqlite3-dev lzma-dev liblzma-dev tk-dev uuid-dev
+
+export VERSION=3.11.4
+
+mkdir -p ~/Downloads ~/Software
+
+cd ~/Downloads
+
+wget https://www.python.org/ftp/python/$VERSION/Python-$VERSION.tar.xz
+
+xz --decompress Python-$VERSION.tar.xz
+
+cd Python-$VERSION
+
+./configure --prefix=$HOME/Software/Python-$VERSION
+
+make && sudo make install
+
