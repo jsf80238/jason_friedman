@@ -1,0 +1,34 @@
+Neural network
+* activation: between 0 and 1, level of "excitement" or "hit"
+* each layer activates the next
+* early layers capture basic elements, for example, when learning numbers the first layer might notice (be activated by) the various strokes or portions of lines and loops, the second layer by complete lines and loops, and the final layer by the numbers consisting of those lines and loops
+* another example, when learning speech the first layer might recognize sounds, the second layer syllables, the next layer words, the next layer phrases, the next layer sentences.
+* need a function that takes the various inputs and outputs a number between 0 and 1; the sigmoid function (either with the log or tanh function)
+* the bias tells us whether the prior inputs meaningfully point in the direction of interest
+* sigmoid function is old-school, newer implementations use the ReLU function, which is defined as ReLU(a) = max(0, a)
+* Convolutional neural network (CNN, ConvNet): for example, with a typical neural network the 2-dimensional image matrix is reshaped into a 1-dimensional vector, which throws away, for example, that pixel (4,5) is actually right next to pixel (5,5). Add color and now there is a 3rd dimension, and the relationship between the red, green and blue pixels is again throw away if the 3-dimensional image matrix is reshaped into a 1-dimensional vector. The convolutional part strides across the various dimensions with kernels/filters (K) to produce a convolved feature that serves as an input to a standard neural network.
+
+Coursera
+* Supervised learning
+** Linear regression
+** Logistic regression
+** Neural networks
+** SVMS
+* Unsupervised learning
+** K-means
+** PCA
+** Anomaly detection
+* Recommeder systems
+* Large scale machine learning
+
+* Ceiling analysis: determine to which part of the pipeline you should devote the most resources.
+
+Cleaning data and improving features:
+* Categorical buckets: one-hot or multi-hot encoding, which is vector where all the elements are 0, set to 1 for all the matching categories.
+** If there are many categories, store a matrix with rows for each category and the columns are "cell_number", "category", "occurrences".
+* Avoid rarely used discrete features, such as id.
+* In place of magic values create a new feature "is_feature_defined".
+* Unknown values can be replaced by means or medians, and can be calculated over the entire dataset or over more-closely matching rows.
+* Outliers: cap/clip the value, or use bins.
+* Scaling, have the values range from -1 to 1.
+* Create feature crosses by multiplying two or more features.
