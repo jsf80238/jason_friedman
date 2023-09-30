@@ -1,5 +1,6 @@
 sudo apt install build-essential libbz2-dev libffi-dev libgdbm-dev liblzma-dev libncurses5-dev libnss3-dev libreadline-dev libsqlite3-dev libssl-dev lzma-dev software-properties-common tk-dev uuid-dev wget zlib1g-dev
-export VERSION=3.11.4
+
+export VERSION=3.11.5
 
 mkdir -p ~/Downloads ~/Software
 
@@ -9,9 +10,12 @@ wget https://www.python.org/ftp/python/$VERSION/Python-$VERSION.tar.xz
 
 xz --decompress Python-$VERSION.tar.xz
 
-cd Python-$VERSION
+tar xf Python-$VERSION.tar
+
+cd ~/Downloads/Python-$VERSION
 
 ./configure --prefix=$HOME/Software/Python-$VERSION
 
 make && sudo make install
 
+sudo rm -rf ~/Downloads/Python-$VERSION*
